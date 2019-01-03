@@ -19,14 +19,23 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 class RecordingThread {
+    private static final int RECORDING_RATE = 8000; // can go up to 44K, if needed
+    private static final int CHANNEL_IN = AudioFormat.CHANNEL_IN_MONO;
+    private static final int CHANNELS_OUT = AudioFormat.CHANNEL_OUT_MONO;
+    private static final int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private static final String LOG_TAG = RecordingThread.class.getSimpleName();
     private static final int SAMPLE_RATE = 44100;
+    private static int BUFFER_SIZE = AudioRecord
+            .getMinBufferSize(RECORDING_RATE, CHANNEL_IN, FORMAT);
 
     private boolean mShouldContinue;
     private Thread mThread;
+    private ArrayList<byte[]> arrayOfbyteArray = new ArrayList<>();
 
     boolean recording() {
         return mThread != null;
@@ -82,26 +91,13 @@ class RecordingThread {
         Log.v(LOG_TAG, "Start recording");
 
         while (mShouldContinue) {
-            short sData[] = new short[1024];
+            byte sData[] = new byte[1024];
             record.read(sData, 0, 1024);
-            byte bData[] = short2byte(sData);
-            Log.v(LOG_TAG, "Data" + Arrays.toString(bData));
+            arrayOfbyteArray.add(sData);
+            Log.v(LOG_TAG, "Data");
         }
 
         record.stop();
         record.release();
-    }
-
-    //convert short to byte
-    private byte[] short2byte(short[] sData) {
-        int shortArrsize = sData.length;
-        byte[] bytes = new byte[shortArrsize * 2];
-        for (int i = 0; i < shortArrsize; i++) {
-            bytes[i * 2] = (byte) (sData[i] & 0x00FF);
-            bytes[(i * 2) + 1] = (byte) (sData[i] >> 8);
-            sData[i] = 0;
-        }
-        return bytes;
-
     }
 }

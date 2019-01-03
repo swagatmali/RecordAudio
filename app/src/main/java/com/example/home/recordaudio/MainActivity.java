@@ -1,9 +1,6 @@
 package com.example.home.recordaudio;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -11,31 +8,37 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-public class MainActivity extends AppCompatActivity {
-    private RecordingThread mRecordingThread;
+public class MainActivity extends AppCompatActivity implements SoundRecorder.OnVoicePlaybackStateChangedListener {
     private static final int REQUEST_RECORD_AUDIO = 13;
+    private StringBuilder str;
+    private SoundRecorder mSoundRecorder;
+    private static final String VOICE_FILE_NAME = "audiorecord.pcm";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mRecordingThread = new RecordingThread();
+        mSoundRecorder = new SoundRecorder(this, VOICE_FILE_NAME, this);
     }
 
     public void onClickStartRecord(View V) {
-        if (!mRecordingThread.recording()) {
-            startAudioRecordingSafe();
-        }
+        startAudioRecordingSafe();
     }
 
     public void onClickStopRecoding(View V) {
-        mRecordingThread.stopRecording();
+        findViewById(R.id.button3).setVisibility(View.VISIBLE);
+        mSoundRecorder.stopRecording();
     }
+
+    public void play(View V) {
+        mSoundRecorder.startPlay();
+    }
+
 
     private void startAudioRecordingSafe() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
-            mRecordingThread.startRecording();
+            mSoundRecorder.startRecording();
         } else {
             requestMicrophonePermission();
         }
@@ -56,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     android.Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
         }
+    }
+
+    @Override
+    public void onPlaybackStopped() {
+
     }
 }
 
